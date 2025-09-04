@@ -4,13 +4,19 @@ English version is available: [README.en.md](README.en.md).
 
 ![codex --resume screenshot](docs/assets/codex-resume.png)
 
-できること
+これは何？（一言で）
 
-- 極小のラッパを追加して、`codex --resume` が使えるようにします。
-- 現在のプロジェクトルート（Git の最上位があればそこ、なければカレントディレクトリ）配下のセッションのみを表示します。
-- 表示列は `# | Elapsed | Turns | Summary`。
-- 概要は「最初のユーザ発話の先頭15文字」（環境ブロックやコードは除去）。ユーザ文が取れない場合は reasoning の要約を使用します。
-- 再開は `codex -c experimental_resume="/abs/path/rollout-*.jsonl"` で起動し、可能なら当時の `cwd` で開始します（相対コマンドの挙動が揃います）。
+- Codex CLI に「履歴から再開」機能を足す、小さな追加ツールです。
+- 使うコマンドはひとつだけ: `codex --resume`
+
+`codex --resume` で何が起こる？
+
+- いま開いているプロジェクト（Git の最上位／なければ現在のフォルダ）で、最近使った会話の一覧が出ます。
+  - 表示: `# | Elapsed | Turns | Summary`
+  - Summary は「最初のユーザ発話の先頭15文字」（環境ブロックやコードは除去）。ユーザ文が見つからないときは簡易要約を表示。
+- 番号を入力すると、その会話の「続き」から Codex が開きます。
+- 履歴はあなたの PC にある JSONL ログ（`~/.codex/sessions`）だけを読み取ります。外部にアップロードしません。
+- 可能なら「当時の作業フォルダ（cwd）」で起動するので、相対パスのコマンドもそのまま通ります。
 
 前提条件
 
@@ -31,6 +37,12 @@ npx codex-resume install
 codex --resume
 # 番号を入力でそのセッションを続きから再開、q で終了
 ```
+
+コマンドの説明
+
+- `codex --resume`
+  - 現在のプロジェクト直近の会話を一覧表示し、番号で選んで再開します。
+  - 一覧はローカルのログから作られます（ネット送信なし）。
 
 アンインストール
 
