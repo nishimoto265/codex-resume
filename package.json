@@ -1,6 +1,6 @@
 {
   "name": "codex-resume",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "List and resume Codex CLI sessions from ~/.codex/sessions via experimental_resume.",
   "bin": {
     "codex-resume": "bin/codex-resume.mjs",
