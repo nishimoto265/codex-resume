@@ -21,8 +21,6 @@ English version is available: [README.en.md](README.en.md).
 
 ```bash
 npx codex-resume install
-# PATH に ~/.local/bin を追加（bash/zsh の例）
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
 ```
 
 使い方
@@ -43,6 +41,10 @@ rm ~/.local/bin/codex
 - `codex not found`: Codex CLI をインストールし PATH に通してください。`CODEX_REAL=/abs/path/to/codex` を設定して使うこともできます。
 - “No sessions …”: このプロジェクト直下で一度 Codex を起動して1行やり取りし、`~/.codex/sessions` に JSONL を生成してください。同一ルートのログのみが表示対象です。
 - 表示のズレ: 出力は `|` 区切り＋数値列右寄せで安定表示にしています。
+- シェルのハッシュ（キャッシュ）: インストール/アンインストール直後に `codex` が古いパスのまま/見つからない場合、シェルのコマンドハッシュをクリアしてください。
+  - bash: `hash -d codex 2>/dev/null; hash -r`
+  - zsh: `rehash`
+  - もしくは新しいターミナルを開く。`type -a codex` で解決順を確認できます。
 
 注意
 
@@ -56,7 +58,3 @@ experimental_resume について（重要）
 - CWD の扱い: `cwd` はこのラッパ（シム）が JSONL から推定して `spawn(..., { cwd })` で反映します（Codex 本体が VM を復元するわけではありません）。
 - reasoning の要約: `type:"reasoning"` の `summary[].text` は UI/ログ向けであり、モデルに送る通常の“メッセージ”としては扱われません。
 - プライバシー: 本 CLI は JSONL の「パス」を Codex に渡すだけで、ログを独自に送信しません。以降の送受信は Codex の通常設定（選択したモデル/プロバイダ）に従います。
-
-License
-
-MIT

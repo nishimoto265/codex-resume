@@ -19,8 +19,6 @@ Install (one-time)
 
 ```bash
 npx codex-resume install
-# Ensure ~/.local/bin is in your PATH (bash/zsh example)
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
 ```
 
 Use
@@ -41,6 +39,10 @@ Troubleshooting
 - “codex not found”: install Codex CLI or ensure it’s on PATH. You can also set `CODEX_REAL=/absolute/path/to/codex` before running.
 - “No sessions …”: start Codex once in this project and send one message to create a JSONL in `~/.codex/sessions`. Only logs with a matching project root are listed.
 - Misaligned columns: output uses `|` separators and right-aligned numbers; appearance should be stable across terminals.
+- Shell command hash (cache): Right after install/uninstall, `codex` may still resolve to the old path or be “not found”. Clear the shell’s command hash or open a new terminal.
+  - bash: `hash -d codex 2>/dev/null; hash -r`
+  - zsh: `rehash`
+  - Verify with `type -a codex` to see resolution order.
 
 Notes
 
@@ -54,7 +56,3 @@ About experimental_resume (important)
 - CWD handling: The shim reads `cwd` from the JSONL and starts Codex in that directory (`spawn(..., { cwd })`). Codex itself is not resuming a VM.
 - Reasoning summaries: `type:"reasoning"` `summary[].text` is for UI/log display; it is not sent as normal chat “messages” to the model.
 - Privacy: This CLI only passes the JSONL path to Codex and does not upload the log by itself. Subsequent network I/O follows your normal Codex config (model/provider).
-
-License
-
-MIT
