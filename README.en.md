@@ -21,6 +21,8 @@ Install (one-time)
 npx codex-resume install
 ```
 
+Right after install, if `codex` does not resolve or points to an old path, open a new terminal (or clear the shell hash: bash `hash -r`, zsh `rehash`).
+
 Use
 
 ```bash
@@ -33,6 +35,8 @@ Uninstall
 ```bash
 rm ~/.local/bin/codex
 ```
+
+After uninstall, open a new terminal (or clear the shell hash) to ensure the original `codex` is resolved again.
 
 Troubleshooting
 

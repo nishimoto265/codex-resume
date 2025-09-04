@@ -23,6 +23,8 @@ English version is available: [README.en.md](README.en.md).
 npx codex-resume install
 ```
 
+インストール直後に `codex` が見つからない／古い経路を指す場合は、新しいターミナルを開き直してください（または bash: `hash -r` / zsh: `rehash`）。
+
 使い方
 
 ```bash
@@ -35,6 +37,8 @@ codex --resume
 ```bash
 rm ~/.local/bin/codex
 ```
+
+アンインストール直後は、新しいターミナルを開き直すと解決が早いです（または bash: `hash -r` / zsh: `rehash`）。
 
 トラブルシュート
 
