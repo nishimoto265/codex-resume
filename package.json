@@ -1,6 +1,6 @@
 {
   "name": "codex-resume",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "List and resume Codex CLI sessions from ~/.codex/sessions via experimental_resume.",
   "bin": {
     "codex-resume": "bin/codex-resume.mjs",
@@ -8,7 +8,13 @@
   },
   "type": "module",
   "license": "MIT",
-  "keywords": ["codex", "cli", "resume", "history", "jsonl"],
+  "keywords": [
+    "codex",
+    "cli",
+    "resume",
+    "history",
+    "jsonl"
+  ],
   "engines": {
     "node": ">=18"
   }
