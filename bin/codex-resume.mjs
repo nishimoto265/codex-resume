@@ -38,15 +38,16 @@ function installShim() {
 
   // Helper to write a shell wrapper pointing to that stable JS
   function writeWrapper(targetPath, realCodexPath) {
-    const script = [
-      '#!/usr/bin/env bash',
-      'set -euo pipefail',
-      // Bake the real codex path as default but allow override via env
-      'if [[ -z "${CODEX_REAL:-}" ]]; then CODEX_REAL="' + realCodexPath + '"; fi',
-      'export CODEX_REAL',
-      // Always delegate to Node + stable shim; shim handles --resume or pass-through
-      'exec "' + process.execPath + '" "' + shimJDst + '" "$@"'
-    ].join('\n') + '\n';
+    let script = '';
+    script += '#!/usr/bin/env bash\n';
+    script += 'set -euo pipefail\n';
+    script += 'if [[ -z "${CODEX_REAL:-}" ]]; then CODEX_REAL="' + realCodexPath.replace(/"/g,'\\"') + '"; fi\n';
+    script += 'export CODEX_REAL\n';
+    script += 'if [[ "${1:-}" == "--resume" ]]; then\n';
+    script += '  exec "' + process.execPath.replace(/"/g,'\\"') + '" "' + shimJDst.replace(/"/g,'\\"') + '" "$@"\n';
+    script += 'else\n';
+    script += '  exec "$CODEX_REAL" "$@"\n';
+    script += 'fi\n';
     fs.writeFileSync(targetPath, script, { mode: 0o755 });
   }
 
