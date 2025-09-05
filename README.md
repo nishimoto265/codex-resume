@@ -1,10 +1,15 @@
-# codex-resume （日本語）
+# codex-resume 
 
 **English version is available:** [README.en.md](README.en.md)
 
 ![codex --resume screenshot](docs/assets/codex-resume.png)
 
 ---
+##  クイックスタート
+
+```bash
+npx codex-resume install
+```
 
 ## 📌 これは何？（一言で）
 
