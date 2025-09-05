@@ -150,14 +150,14 @@ async function quickMeta(file) {
           turns++;
           if (!preview) {
             const raw = extractUserText(j);
-            const cleaned = sanitizePreview(raw, 15);
+            const cleaned = summarizeUserText(raw, 15);
             if (cleaned) preview = cleaned;
           }
         }
         // If we still don't have preview, try reasoning.summary or assistant text (fallback)
         if (!preview && j?.summary) {
           const raw = extractText(j);
-          const cleaned = sanitizePreview(raw, 15);
+          const cleaned = summarizeUserText(raw, 15);
           if (cleaned) preview = cleaned;
         }
         if (!cwd) {
@@ -222,6 +222,51 @@ function sanitizePreview(s, maxLen = 120) {
   t = t.replace(/\s+/g, " ").trim();
   // Keep it concise
   return truncate(t, maxLen);
+}
+
+// Heuristic summary for user messages: drop boilerplate and take first meaningful line.
+function summarizeUserText(s, maxLen = 15) {
+  if (!s) return "";
+  let t = String(s);
+  // Remove environment blocks and code blocks
+  t = t.replace(/<environment_context>[\s\S]*?<\/environment_context>/g, "");
+  t = t.replace(/```[\s\S]*?```/g, "\n");
+  // Normalize line breaks
+  t = t.replace(/\r\n?/g, "\n");
+
+  // If the message contains the IDE context template, try to take the request part
+  const idxReq = t.indexOf("My request for Codex:");
+  if (idxReq >= 0) {
+    const sub = t.slice(idxReq + "My request for Codex:".length);
+    const req = pickFirstMeaningfulLine(sub);
+    if (req) return truncate(req, maxLen);
+  }
+
+  // Drop common boilerplate sections
+  t = t.replace(/#\s*Context\s*from[\s\S]*?(\n\n|$)/gi, "\n");
+  t = t.replace(/^##?\s+Active file:[\s\S]*?(\n\n|$)/gim, "\n");
+  t = t.replace(/^##?\s+Open tabs:[\s\S]*?(\n\n|$)/gim, "\n");
+  t = t.replace(/^##?\s+My request for Codex:[\s\S]*?\n/gim, "");
+
+  const first = pickFirstMeaningfulLine(t);
+  if (first) return truncate(first, maxLen);
+
+  // Fallback to sanitized preview
+  return sanitizePreview(s, maxLen);
+}
+
+function pickFirstMeaningfulLine(text) {
+  const lines = String(text).split("\n").map(l => l.trim()).filter(Boolean);
+  for (const line of lines) {
+    // Skip markdown headings, list bullets, and obvious boilerplate
+    if (/^#{1,6}\s/.test(line)) continue;
+    if (/^[-*]\s/.test(line)) continue;
+    if (/^Active file:|^Open tabs:|^Context\b|^#\s*Context\b/i.test(line)) continue;
+    if (/^Token usage:|^Usage: codex\b/i.test(line)) continue;
+    // Must contain some letters or CJK
+    if (/[A-Za-z\u3040-\u30FF\u4E00-\u9FFF]/.test(line)) return line;
+  }
+  return "";
 }
 
 function deepFindPath(obj, keys) {
