@@ -9,7 +9,7 @@
 - **Adds a tiny wrapper** so you can type: **`codex --resume`**
 - **Shows only sessions** under the current project root (Git top-level if available; otherwise the current directory)
 - **Table columns:** `# | Elapsed | Turns | Summary`
-- **Summary:** First 15 chars of the first user message (environment blocks and code fences removed). Falls back to a reasoning summary if no user text is detected
+- **Summary:** First 50 chars of the first user message (environment blocks and code fences removed). Falls back to a reasoning summary if no user text is detected
 - **Resume:** Launches `codex -c experimental_resume="/abs/path/rollout-*.jsonl"` and, when available, starts in the recorded cwd so relative commands work as before
 
 ---

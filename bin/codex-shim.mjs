@@ -150,14 +150,14 @@ async function quickMeta(file) {
           turns++;
           if (!preview) {
             const raw = extractUserText(j);
-            const cleaned = summarizeUserText(raw, 15);
+            const cleaned = summarizeUserText(raw, 50);
             if (cleaned) preview = cleaned;
           }
         }
         // If we still don't have preview, try reasoning.summary or assistant text (fallback)
         if (!preview && j?.summary) {
           const raw = extractText(j);
-          const cleaned = summarizeUserText(raw, 15);
+          const cleaned = summarizeUserText(raw, 50);
           if (cleaned) preview = cleaned;
         }
         if (!cwd) {
