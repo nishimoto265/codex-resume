@@ -18,12 +18,9 @@ if (args[0] === "install" || args[0] === "--install" || args[0] === "--install-s
 }
 
 function installShim() {
-  let realCodex = null;
-  try {
-    realCodex = execSync("command -v codex", { stdio: ["ignore","pipe","ignore"] }).toString().trim();
-  } catch {}
+  const realCodex = process.env.CODEX_REAL || resolveRealCodex();
   if (!realCodex) {
-    console.error("Could not find 'codex' in PATH. Please install Codex CLI first.");
+    console.error("Could not find the real 'codex'. Set CODEX_REAL=/abs/path/to/codex and re-run: npx codex-resume install");
     process.exit(1);
   }
 
@@ -43,6 +40,15 @@ function installShim() {
     script += 'set -euo pipefail\n';
     script += 'if [[ -z "${CODEX_REAL:-}" ]]; then CODEX_REAL="' + realCodexPath.replace(/"/g,'\\"') + '"; fi\n';
     script += 'export CODEX_REAL\n';
+    // avoid self-recursion if CODEX_REAL points to this wrapper
+    script += 'WRAPPER_PATH="$0"\n';
+    script += 'if [[ "$CODEX_REAL" == "$WRAPPER_PATH" ]]; then\n';
+    script += '  IFS=:\n  for d in $PATH; do\n';
+    script += '    [[ -z "$d" ]] && continue; cand="$d/codex"; [[ "$cand" == "$WRAPPER_PATH" ]] && continue;\n';
+    script += '    if [[ -x "$cand" ]] && ! grep -q "codex-shim.mjs" "$cand" 2>/dev/null; then CODEX_REAL="$cand"; export CODEX_REAL; break; fi\n';
+    script += '  done\n';
+    script += 'fi\n';
+    script += 'if [[ "$CODEX_REAL" == "$WRAPPER_PATH" || -z "$CODEX_REAL" ]]; then echo "codex-resume: could not resolve real codex. Set CODEX_REAL=/abs/path/to/codex" 1>&2; exit 1; fi\n';
     script += 'if [[ "${1:-}" == "--resume" ]]; then\n';
     script += '  exec "' + process.execPath.replace(/"/g,'\\"') + '" "' + shimJDst.replace(/"/g,'\\"') + '" "$@"\n';
     script += 'else\n';
@@ -58,4 +64,30 @@ function installShim() {
   writeWrapper(shimPath, realCodex);
   console.log(`Installed wrapper: ${shimPath}`);
   console.log(`If 'codex --resume' is not found or still calls the original, ensure '${homeBin}' is at the front of your PATH.`);
+}
+
+function resolveRealCodex() {
+  // Prefer explicit env hint if valid
+  try {
+    if (process.env.CODEX_REAL && fs.existsSync(process.env.CODEX_REAL)) return process.env.CODEX_REAL;
+  } catch {}
+  const avoid = path.join(os.homedir(), ".local", "bin");
+  const dirs = String(process.env.PATH || "").split(path.delimiter);
+  for (const d of dirs) {
+    if (!d || d === avoid) continue;
+    const p = path.join(d, "codex");
+    try {
+      if (fs.existsSync(p) && fs.statSync(p).isFile()) {
+        const txt = fs.readFileSync(p, "utf8");
+        if (txt.includes("codex-shim.mjs")) continue; // skip wrapper
+        return p;
+      }
+    } catch {}
+  }
+  // Fallback: if current codex has a .real sibling
+  try {
+    const first = execSync("command -v codex", { stdio: ["ignore","pipe","ignore"] }).toString().trim();
+    if (first && fs.existsSync(first + ".real")) return first + ".real";
+  } catch {}
+  return null;
 }
