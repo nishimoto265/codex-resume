@@ -136,7 +136,7 @@ async function collectSameRootSessions(rootDir, projectRoot, limit) {
 
 async function quickMeta(file) {
   const stream = fs.createReadStream(file, { encoding: "utf8" });
-  let buf = "", turns = 0, cwd = "", preview = "";
+  let buf = "", turns = 0, cwd = "", preview = "", firstAssistant = "";
   for await (const chunk of stream) {
     buf += chunk;
     let idx;
@@ -153,6 +153,11 @@ async function quickMeta(file) {
             const cleaned = summarizeUserText(raw, 50);
             if (cleaned) preview = cleaned;
           }
+        }
+        if (!firstAssistant && (role === "assistant" || /"role"\s*:\s*"assistant"/.test(line))) {
+          const rawA = extractAssistantText(j);
+          const cleanedA = summarizeUserText(rawA, 50);
+          if (cleanedA) firstAssistant = cleanedA;
         }
         // If we still don't have preview, try reasoning.summary or assistant text (fallback)
         if (!preview && j?.summary) {
@@ -181,6 +186,7 @@ async function quickMeta(file) {
       } catch {}
     }
   }
+  if (!preview && firstAssistant) preview = firstAssistant;
   return { turns, cwd, preview };
 }
 
@@ -209,6 +215,18 @@ function extractUserText(j) {
   }
   if (!t && j.text) t = String(j.text);
   return t || "";
+}
+
+function extractAssistantText(j) {
+  // Prefer message.content or array text chunks
+  if (typeof j.content === "string") return j.content;
+  if (Array.isArray(j.content)) {
+    const chunk = j.content.find(c => typeof c?.text === "string" && c.text.trim());
+    if (chunk) return String(chunk.text);
+  }
+  if (j?.message?.content && typeof j.message.content === "string") return j.message.content;
+  if (j.text) return String(j.text);
+  return "";
 }
 
 function sanitizePreview(s, maxLen = 120) {
@@ -263,6 +281,10 @@ function pickFirstMeaningfulLine(text) {
     if (/^[-*]\s/.test(line)) continue;
     if (/^Active file:|^Open tabs:|^Context\b|^#\s*Context\b/i.test(line)) continue;
     if (/^Token usage:|^Usage: codex\b/i.test(line)) continue;
+    // Skip shell prompts or paths
+    if (/^[\w.-]+@[\w.-]+[ :].*/.test(line)) continue; // user@host ...
+    if (/^(\$|#|>|%)\s/.test(line)) continue;         // $ cmd
+    if (/^(~|\/)\S{2,}/.test(line)) continue;         // path-like
     // Must contain some letters or CJK
     if (/[A-Za-z\u3040-\u30FF\u4E00-\u9FFF]/.test(line)) return line;
   }
